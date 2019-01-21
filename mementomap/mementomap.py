@@ -34,31 +34,34 @@ class MementoMap():
         }
 
 
-    def compact(self, infile, cfact=1):
+    def compact(self, infile, outfile, cfact=1.0):
+        seps = {"host": ",", "path": "/"}
         track = {
             "host": [None]*self.MAXDEPTHS["host"],
             "path": [None]*self.MAXDEPTHS["path"]
         }
+        opf = open(outfile, "w")
         with open(infile) as f:
             for line in f:
                 surtk, freq, *_ = line.split(maxsplit=2)
                 freq = int(freq)
                 host, _, path = surtk.partition(")")
 
-                def gen_keys(str, group, sep):
-                    parts = str.strip(sep).split(sep, self.MAXDEPTHS[group]-1)
-                    return [sep.join(parts[:i+1]) for i in range(len(parts))]
+                def gen_keys(str, group):
+                    parts = str.strip(seps[group]).split(seps[group], self.MAXDEPTHS[group]-1)
+                    return [seps[group].join(parts[:i+1]) for i in range(len(parts))]
 
                 keys = {
-                    "host": gen_keys(host, "host", ","),
-                    "path": gen_keys(surtk, "path", "/")
+                    "host": gen_keys(host, "host"),
+                    "path": gen_keys(surtk, "path")
                 }
 
                 def init_node(group, idx):
                     track[group][idx] = {
                         "key": keys[group][idx],
                         "ccount": 0,
-                        "mcount": freq
+                        "mcount": freq,
+                        "optr": opf.tell()
                     }
                     if idx:
                         track[group][idx-1]["ccount"] += 1
@@ -73,8 +76,10 @@ class MementoMap():
                     for i in range(idx, self.MAXDEPTHS[group]):
                         if not track[group][i]:
                             break
-                        if track[group][i]["ccount"]*cfact > self.DEPTHSTATS[group][i][1]:
-                            # TODO: Adjust references here for compaction
+                        if track[group][i]["ccount"] > self.DEPTHSTATS[group][i][1]*cfact:
+                            opf.seek(track[group][i]["optr"])
+                            opf.truncate()
+                            opf.write(f'{track[group][i]["key"]}{seps[group]}* {track[group][i]["mcount"]}\n')
                             return True
 
                 for i in range(len(keys["host"])):
@@ -96,6 +101,8 @@ class MementoMap():
                         compact_subtree("path", i)
                         reset_trail("path", i)
                         init_node("path", i)
+                opf.write(line)
                 if self.debug:
                     print(f"> {surtk}\t{freq}", file=sys.stderr)
                     print(track, file=sys.stderr)
+        opf.close()
