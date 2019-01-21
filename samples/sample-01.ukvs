@@ -1,0 +1,14 @@
+com,cnn)/ 200
+com,cnn)/images 100
+com,cnn)/news/a/b/c 5
+com,cnn)/news/a/b/d 2
+com,cnn)/news/a/b/e 4
+com,cnn)/news/a/f/e 3
+com,news)/ 150
+com,news)/foo 20
+edu,odu)/ 500
+edu,odu)/compsci 250
+edu,odu,cs)/ 100
+edu,odu,cs)/~mln/ 40
+edu,odu,cs)/~mln/pubs 20
+edu,psu)/ 10
