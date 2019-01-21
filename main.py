@@ -4,4 +4,5 @@ from mementomap.mementomap import MementoMap
 
 
 if __name__ == "__main__":
-    mm = MementoMap()
+    mm = MementoMap(debug=True)
+    mm.compact("samples/sample-01.ukvs", cfact=0.9)
