@@ -1,4 +1,5 @@
 import sys
+import re
 
 
 class MementoMap():
@@ -109,3 +110,13 @@ class MementoMap():
                     print(f"> {surtk}\t{freq}", file=sys.stderr)
                     print(track, file=sys.stderr)
         opf.close()
+
+
+    def lookup(self, infile, surt):
+        def gen_keys(surt):
+            key = surt.split("?")[0].strip("/")
+            keys = [key]
+            while "," in key:
+                keys.append(re.sub(r"(.+)([,\/]).+$", r"\1\2*", key))
+                key = re.sub(r"(.+)([,\/]).+$", r"\1", key)
+            return keys
