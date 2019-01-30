@@ -114,9 +114,11 @@ class MementoMap():
 
     def lookup(self, infile, surt):
         def gen_keys(surt):
+            keyre = re.compile(r"(.+)([,/]).+")
             key = surt.split("?")[0].strip("/")
             keys = [key]
             while "," in key:
-                keys.append(re.sub(r"(.+)([,\/]).+$", r"\1\2*", key))
-                key = re.sub(r"(.+)([,\/]).+$", r"\1", key)
+                m = keyre.match(key)
+                keys.append(f"{m[1]}{m[2]}*")
+                key = m[1]
             return keys
