@@ -49,41 +49,41 @@ class MementoMap():
                 freq = int(freq)
                 host, _, path = surtk.partition(")")
 
-                def gen_keys(str, group):
-                    parts = str.strip(seps[group]).split(seps[group], self.MAXDEPTHS[group]-1)
-                    return [seps[group].join(parts[:i+1]) for i in range(len(parts))]
+                def gen_keys(str, layer):
+                    parts = str.strip(seps[layer]).split(seps[layer], self.MAXDEPTHS[layer]-1)
+                    return [seps[layer].join(parts[:i+1]) for i in range(len(parts))]
 
                 keys = {
                     "host": gen_keys(host, "host"),
                     "path": gen_keys(surtk, "path")
                 }
 
-                def init_node(group, idx):
-                    track[group][idx] = {
-                        "key": keys[group][idx],
+                def init_node(layer, idx):
+                    track[layer][idx] = {
+                        "key": keys[layer][idx],
                         "ccount": 0,
                         "mcount": freq,
                         "optr": opf.tell()
                     }
                     if idx:
-                        track[group][idx-1]["ccount"] += 1
+                        track[layer][idx-1]["ccount"] += 1
 
-                def reset_trail(group, idx):
-                    for i in range(idx, self.MAXDEPTHS[group]):
-                        if not track[group][i]:
+                def reset_trail(layer, idx):
+                    for i in range(idx, self.MAXDEPTHS[layer]):
+                        if not track[layer][i]:
                             break
-                        track[group][i] = None
+                        track[layer][i] = None
 
-                def compact_subtree(group, idx):
-                    for i in range(idx, self.MAXDEPTHS[group]):
-                        if not track[group][i]:
+                def compact_subtree(layer, idx):
+                    for i in range(idx, self.MAXDEPTHS[layer]):
+                        if not track[layer][i]:
                             break
-                        if not i and group == "host":
+                        if not i and layer == "host":
                             continue
-                        if track[group][i]["ccount"] > self.DEPTHSTATS[group][i][1]*cfact[group]:
-                            opf.seek(track[group][i]["optr"])
+                        if track[layer][i]["ccount"] > self.DEPTHSTATS[layer][i][1]*cfact[layer]:
+                            opf.seek(track[layer][i]["optr"])
                             opf.truncate()
-                            opf.write(f'{track[group][i]["key"]}{seps[group]}* {track[group][i]["mcount"]}\n')
+                            opf.write(f'{track[layer][i]["key"]}{seps[layer]}* {track[layer][i]["mcount"]}\n')
                             return True
 
                 for i in range(len(keys["host"])):
