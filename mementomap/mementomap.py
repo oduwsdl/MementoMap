@@ -122,3 +122,34 @@ class MementoMap():
                 keys.append(f"{m[1]}{m[2]}*")
                 key = m[1]
             return keys
+
+        def bin_search(infile, key):
+            with open(infile) as f:
+                surtk, freq, *_ = f.readline().split(maxsplit=2)
+                if self.debug:
+                    print(f"Matching FIRST> {key} {surtk} {freq}", file=sys.stderr)
+                if key == surtk:
+                    return [surtk, freq]
+                left = 0
+                f.seek(0, 2)
+                right = f.tell()
+                while (left < right):
+                    mid = (right + left) // 2
+                    f.seek(mid)
+                    f.readline()
+                    surtk, freq, *_ = f.readline().split(maxsplit=2)
+                    if self.debug:
+                        print(f"Matching {left}:{mid}:{right}> {key} {surtk} {freq}", file=sys.stderr)
+                    if key == surtk:
+                        return [surtk, freq]
+                    elif key > surtk:
+                        left = mid + 1
+                    else:
+                        right = mid - 1
+
+        for k in gen_keys(surt):
+            if self.debug:
+                print(f"Searching> {k}", file=sys.stderr)
+            res = bin_search(infile, k)
+            if res:
+                return res
