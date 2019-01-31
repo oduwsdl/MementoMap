@@ -23,4 +23,5 @@ if __name__ == "__main__":
         mm.compact(sys.argv[2], sys.argv[3], hcf=float(sys.argv[4]), pcf=float(sys.argv[5]))
     elif sys.argv[1] == "lookup":
         res = mm.lookup(sys.argv[2], sys.argv[3])
-        print(res)
+        if res:
+            print(" ".join(res))
