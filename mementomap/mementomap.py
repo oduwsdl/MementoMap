@@ -53,7 +53,6 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                         continue
                     if track[layer][i]["ccount"] > cutoff[layer][i]:
                         opf.seek(track[layer][i]["optr"])
-                        opf.truncate()
                         opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
                         return True
 
@@ -77,6 +76,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _reset_trail("path", i)
                     _init_node("path", i)
             opf.write(line)
+    opf.truncate()
     opf.close()
 
 
