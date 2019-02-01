@@ -18,10 +18,10 @@ if __name__ == "__main__":
     if len(sys.argv) < 2 or (sys.argv[1] == "compact" and len(sys.argv) < 6) or (sys.argv[1] == "lookup" and len(sys.argv) < 4):
         print_help()
 
-    mm = MementoMap(debug=debug)
+    mm = MementoMap()
     if sys.argv[1] == "compact":
-        mm.compact(sys.argv[2], sys.argv[3], hcf=float(sys.argv[4]), pcf=float(sys.argv[5]))
+        mm.compact(sys.argv[2], sys.argv[3], hcf=float(sys.argv[4]), pcf=float(sys.argv[5]), debug=debug)
     elif sys.argv[1] == "lookup":
-        res = mm.lookup(sys.argv[2], sys.argv[3])
+        res = mm.lookup(sys.argv[2], sys.argv[3], debug=debug)
         if res:
             print(" ".join(res))
