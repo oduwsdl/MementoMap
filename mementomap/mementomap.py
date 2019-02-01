@@ -124,7 +124,7 @@ class MementoMap():
             return keys
 
         def bin_search(infile, key):
-            with open(infile) as f:
+            with open(infile, "rb") as f:
                 surtk, freq, *_ = f.readline().split(maxsplit=2)
                 if self.debug:
                     print(f"Matching FIRST> {key} {surtk} {freq}", file=sys.stderr)
@@ -133,7 +133,7 @@ class MementoMap():
                 left = 0
                 f.seek(0, 2)
                 right = f.tell()
-                while (left < right):
+                while (right - left > 1):
                     mid = (right + left) // 2
                     f.seek(mid)
                     f.readline()
@@ -143,13 +143,13 @@ class MementoMap():
                     if key == surtk:
                         return [surtk, freq]
                     elif key > surtk:
-                        left = mid + 1
+                        left = mid
                     else:
-                        right = mid - 1
+                        right = mid
 
         for k in gen_keys(surt):
             if self.debug:
                 print(f"Searching> {k}", file=sys.stderr)
-            res = bin_search(infile, k)
+            res = bin_search(infile, k.encode())
             if res:
-                return res
+                return [i.decode() for i in res]
