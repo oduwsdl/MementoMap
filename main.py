@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if "--debug" in sys.argv:
         debug = True
 
-    if (sys.argv[1] == "compact" and len(sys.argv) < 6) or (sys.argv[1] == "lookup" and len(sys.argv) < 4):
+    if len(sys.argv) < 2 or (sys.argv[1] == "compact" and len(sys.argv) < 6) or (sys.argv[1] == "lookup" and len(sys.argv) < 4):
         print_help()
 
     mm = MementoMap(debug=debug)

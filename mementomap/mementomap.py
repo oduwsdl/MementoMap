@@ -35,9 +35,12 @@ class MementoMap():
         }
 
 
-    def compact(self, infile, outfile, hcf=1.0, pcf=1.0):
+    def compact(self, infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429):
         seps = {"host": ",", "path": "/"}
-        cfact = {"host": hcf, "path": pcf}
+        cutoff = {
+            "host": [ha * (i+1) ** -hk * hcf for i in range(self.MAXDEPTHS["host"])],
+            "path": [pa * (i+1) ** -pk * pcf for i in range(self.MAXDEPTHS["path"])]
+        }
         track = {
             "host": [None]*self.MAXDEPTHS["host"],
             "path": [None]*self.MAXDEPTHS["path"]
@@ -80,7 +83,7 @@ class MementoMap():
                             break
                         if not i and layer == "host":
                             continue
-                        if track[layer][i]["ccount"] > self.DEPTHSTATS[layer][i][1]*cfact[layer]:
+                        if track[layer][i]["ccount"] > cutoff[layer][i]:
                             opf.seek(track[layer][i]["optr"])
                             opf.truncate()
                             opf.write(f'{track[layer][i]["key"]}{seps[layer]}* {track[layer][i]["mcount"]}\n')
