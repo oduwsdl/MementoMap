@@ -2,7 +2,7 @@ import sys
 import re
 
 
-def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, debug=False):
+def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9):
     sep = {"host": ",", "path": "/"}
     maxdepth = {"host": hdepth, "path": pdepth}
     cutoff = {
@@ -77,17 +77,12 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _reset_trail("path", i)
                     _init_node("path", i)
             opf.write(line)
-            if debug:
-                print(f"> {surtk}\t{freq}", file=sys.stderr)
-                print(track, file=sys.stderr)
     opf.close()
 
 
-def bin_search(infile, key, debug=False):
+def bin_search(infile, key):
     with open(infile, "rb") as f:
         surtk, freq, *_ = f.readline().split(maxsplit=2)
-        if debug:
-            print(f"Matching FIRST> {key} {surtk} {freq}", file=sys.stderr)
         if key == surtk:
             return [surtk, freq]
         left = 0
@@ -98,8 +93,6 @@ def bin_search(infile, key, debug=False):
             f.seek(mid)
             f.readline()
             surtk, freq, *_ = f.readline().split(maxsplit=2)
-            if debug:
-                print(f"Matching {left}:{mid}:{right}> {key} {surtk} {freq}", file=sys.stderr)
             if key == surtk:
                 return [surtk, freq]
             elif key > surtk:
@@ -119,10 +112,8 @@ def lookup_keys(surt):
         return keys
 
 
-def lookup(infile, surt, debug=False):
+def lookup(infile, surt):
     for k in lookup_keys(surt):
-        if debug:
-            print(f"Searching> {k}", file=sys.stderr)
-        res = bin_search(infile, k.encode(), debug=debug)
+        res = bin_search(infile, k.encode())
         if res:
             return [i.decode() for i in res]
