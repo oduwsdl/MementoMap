@@ -6,8 +6,6 @@ from mementomap.mementomap import compact, lookup
 
 
 if __name__ == "__main__":
-    debug = False
-
     def print_help():
         print(f"Usage:\n  {sys.argv[0]} lookup <infile:path> <key:surt>\n  {sys.argv[0]} compact <infile:path> <outfile:path> <hcf:float> <pcf:float>", file=sys.stderr)
         sys.exit(1)
