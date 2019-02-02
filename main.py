@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
 
 from mementomap.mementomap import compact, lookup
+
+
+def show_lookup(**kw):
+    res = lookup(**kw)
+    if res:
+        print(" ".join(res))
 
 
 if __name__ == "__main__":
@@ -21,23 +26,15 @@ if __name__ == "__main__":
     parser_compact.add_argument("--pk", type=float, metavar="", default=1.429, help="Power law k parameter for path")
     parser_compact.add_argument("--hdepth", type=int, metavar="", default=8, help="Max host depth")
     parser_compact.add_argument("--pdepth", type=int, metavar="", default=9, help="Max path depth")
+    parser_compact.set_defaults(func=compact)
 
     parser_lookup = subparsers.add_parser("lookup", help="Look for a SURT into a MementoMap")
     parser_lookup.add_argument("mmap", help="MementoMap file to look into")
     parser_lookup.add_argument("surt", help="SURT to look for")
+    parser_lookup.set_defaults(func=show_lookup)
 
     args = parser.parse_args()
-
-    def print_help():
-        print(f"Usage:\n  {sys.argv[0]} lookup <infile:path> <key:surt>\n  {sys.argv[0]} compact <infile:path> <outfile:path> <hcf:float> <pcf:float>", file=sys.stderr)
-        sys.exit(1)
-
-    if len(sys.argv) < 2 or (sys.argv[1] == "compact" and len(sys.argv) < 6) or (sys.argv[1] == "lookup" and len(sys.argv) < 4):
-        print_help()
-
-    if sys.argv[1] == "compact":
-        compact(sys.argv[2], sys.argv[3], hcf=float(sys.argv[4]), pcf=float(sys.argv[5]))
-    elif sys.argv[1] == "lookup":
-        res = lookup(sys.argv[2], sys.argv[3])
-        if res:
-            print(" ".join(res))
+    try:
+        args.func(**vars(args))
+    except Exception as e:
+        parser.print_help()

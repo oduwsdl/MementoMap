@@ -1,8 +1,7 @@
-import sys
 import re
 
 
-def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9):
+def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, **kw):
     sep = {"host": ",", "path": "/"}
     maxdepth = {"host": hdepth, "path": pdepth}
     cutoff = {
@@ -80,8 +79,8 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
     opf.close()
 
 
-def bin_search(infile, key):
-    with open(infile, "rb") as f:
+def bin_search(mmap, key):
+    with open(mmap, "rb") as f:
         surtk, freq, *_ = f.readline().split(maxsplit=2)
         if key == surtk:
             return [surtk, freq]
@@ -109,11 +108,11 @@ def lookup_keys(surt):
         m = keyre.match(key)
         keys.append(f"{m[1]}{m[2]}*")
         key = m[1]
-        return keys
+    return keys
 
 
-def lookup(infile, surt):
+def lookup(mmap, surt, **kw):
     for k in lookup_keys(surt):
-        res = bin_search(infile, k.encode())
+        res = bin_search(mmap, k.encode())
         if res:
             return [i.decode() for i in res]
