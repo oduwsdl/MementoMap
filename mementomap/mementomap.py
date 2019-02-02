@@ -13,48 +13,48 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
         "host": [None]*maxdepth["host"],
         "path": [None]*maxdepth["path"]
     }
+
+    def _gen_keys(str, layer):
+        parts = str.strip(sep[layer]).split(sep[layer], maxdepth[layer]-1)
+        return [sep[layer].join(parts[:i+1]) for i in range(len(parts))]
+
+    def _init_node(layer, idx):
+        track[layer][idx] = {
+            "key": keys[layer][idx],
+            "ccount": 0,
+            "mcount": freq,
+            "optr": opf.tell()
+        }
+        if idx:
+            track[layer][idx-1]["ccount"] += 1
+
+    def _reset_trail(layer, idx):
+        for i in range(idx, maxdepth[layer]):
+            if not track[layer][i]:
+                break
+            track[layer][i] = None
+
+    def _compact_subtree(layer, idx):
+        for i in range(idx, maxdepth[layer]):
+            if not track[layer][i]:
+                break
+            if not i and layer == "host":
+                continue
+            if track[layer][i]["ccount"] > cutoff[layer][i]:
+                opf.seek(track[layer][i]["optr"])
+                opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
+                return True
+
     opf = open(outfile, "w")
     with open(infile) as f:
         for line in f:
             surtk, freq, *_ = line.split(maxsplit=2)
             freq = int(freq)
             host, _, path = surtk.partition(")")
-
-            def _gen_keys(str, layer):
-                parts = str.strip(sep[layer]).split(sep[layer], maxdepth[layer]-1)
-                return [sep[layer].join(parts[:i+1]) for i in range(len(parts))]
-
             keys = {
                 "host": _gen_keys(host, "host"),
                 "path": _gen_keys(surtk, "path")
             }
-
-            def _init_node(layer, idx):
-                track[layer][idx] = {
-                    "key": keys[layer][idx],
-                    "ccount": 0,
-                    "mcount": freq,
-                    "optr": opf.tell()
-                }
-                if idx:
-                    track[layer][idx-1]["ccount"] += 1
-
-            def _reset_trail(layer, idx):
-                for i in range(idx, maxdepth[layer]):
-                    if not track[layer][i]:
-                        break
-                    track[layer][i] = None
-
-            def _compact_subtree(layer, idx):
-                for i in range(idx, maxdepth[layer]):
-                    if not track[layer][i]:
-                        break
-                    if not i and layer == "host":
-                        continue
-                    if track[layer][i]["ccount"] > cutoff[layer][i]:
-                        opf.seek(track[layer][i]["optr"])
-                        opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
-                        return True
 
             for i in range(len(keys["host"])):
                 if not track["host"][i]:
