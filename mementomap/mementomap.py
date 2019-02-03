@@ -42,7 +42,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
             if track[layer][i]["ccount"] > cutoff[layer][i]:
                 opf.seek(track[layer][i]["optr"])
                 opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
-                return True
+                break
 
     opf = open(outfile, "w")
     with open(infile) as f:
@@ -61,9 +61,10 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                 elif track["host"][i]["key"] == keys["host"][i]:
                     track["host"][i]["mcount"] += freq
                 else:
-                    if _compact_subtree("host", i):
-                        _reset_trail("path", 0)
+                    _compact_subtree("host", i)
                     _reset_trail("host", i)
+                    _compact_subtree("path", 0)
+                    _reset_trail("path", 0)
                     _init_node("host", i)
             for i in range(len(keys["path"])):
                 if not track["path"][i]:
@@ -75,6 +76,8 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _reset_trail("path", i)
                     _init_node("path", i)
             opf.write(line)
+        _compact_subtree("host", 0)
+        _compact_subtree("path", 0)
     opf.truncate()
     opf.close()
 
