@@ -12,7 +12,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
         "host": [None]*maxdepth["host"],
         "path": [None]*maxdepth["path"]
     }
-    counts = {"inlines": 0, "outlines": 0, "inbytes": 0, "outbytes": 0}
+    counts = {"inlines": 0, "outlines": 0, "inbytes": 0, "outbytes": 0, "rollups": 0}
 
     def _gen_keys(str, layer):
         parts = str.strip(sep[layer]).split(sep[layer], maxdepth[layer]-1)
@@ -46,6 +46,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
                 counts["outlines"] = trail[layer][i]["oline"]
                 opf.write(trail[layer][i]["key"] + sep[layer] + b"* %d\n" % trail[layer][i]["mcount"])
                 counts["outlines"] += 1
+                counts["rollups"] += 1
                 break
 
     opf = open(outfile, "wb")

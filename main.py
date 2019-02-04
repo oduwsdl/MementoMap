@@ -20,7 +20,7 @@ def run_compact(**kw):
     except Exception as e:
         print(e)
     fobj.close()
-    print(f'{res["inlines"]} {res["outlines"]} {res["inbytes"]} {res["outbytes"]}')
+    print(f'{res["inlines"]} {res["outlines"]} {res["inbytes"]} {res["outbytes"]} {res["rollups"]}')
 
 
 def run_lookup(**kw):
