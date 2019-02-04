@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 
 import argparse
+import gzip
+import sys
 
 from mementomap.mementomap import compact, lookup
 
 
 def run_compact(**kw):
-    res = compact(**kw)
+    if kw["infile"].endswith(".gz"):
+        fobj = gzip.open(kw["infile"], "rb")
+    elif kw["infile"] == "-":
+        fobj = sys.stdin.buffer
+    else:
+        fobj = open(kw["infile"], "rb")
+    kw["infiter"] = fobj
+    try:
+        res = compact(**kw)
+    except Exception as e:
+        print(e)
+    fobj.close()
     print(f'{res["inlines"]} {res["outlines"]}')
 
 

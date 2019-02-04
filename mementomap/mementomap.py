@@ -1,7 +1,7 @@
 import re
 
 
-def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, **kw):
+def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, **kw):
     sep = {"host": b",", "path": b"/"}
     maxdepth = {"host": hdepth, "path": pdepth}
     cutoff = {
@@ -49,46 +49,45 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                 break
 
     opf = open(outfile, "wb")
-    with open(infile, "rb") as f:
-        for line in f:
-            counts["inlines"] += 1
-            if line[0] == b"!":
-                opf.write(line)
-                counts["outlines"] += 1
-                continue
-            parts = line.split(maxsplit=2)
-            surtk = parts[0].strip(b"/,")
-            freq = int(parts[1])
-            host, _, path = surtk.partition(b")")
-            keys = {
-                "host": _gen_keys(host, "host"),
-                "path": _gen_keys(surtk, "path")
-            }
-
-            for i in range(len(keys["host"])):
-                if not trail["host"][i]:
-                    _init_node("host", i)
-                elif trail["host"][i]["key"] == keys["host"][i]:
-                    trail["host"][i]["mcount"] += freq
-                else:
-                    _compact_subtree("host", i)
-                    _reset_trail("host", i)
-                    _compact_subtree("path", 0)
-                    _reset_trail("path", 0)
-                    _init_node("host", i)
-            for i in range(len(keys["path"])):
-                if not trail["path"][i]:
-                    _init_node("path", i)
-                elif trail["path"][i]["key"] == keys["path"][i]:
-                    trail["path"][i]["mcount"] += freq
-                else:
-                    _compact_subtree("path", i)
-                    _reset_trail("path", i)
-                    _init_node("path", i)
-            opf.write(surtk + b" %d\n" % freq)
+    for line in infiter:
+        counts["inlines"] += 1
+        if line[0] == b"!":
+            opf.write(line)
             counts["outlines"] += 1
-        _compact_subtree("host", 0)
-        _compact_subtree("path", 0)
+            continue
+        parts = line.split(maxsplit=2)
+        surtk = parts[0].strip(b"/,")
+        freq = int(parts[1])
+        host, _, path = surtk.partition(b")")
+        keys = {
+            "host": _gen_keys(host, "host"),
+            "path": _gen_keys(surtk, "path")
+        }
+
+        for i in range(len(keys["host"])):
+            if not trail["host"][i]:
+                _init_node("host", i)
+            elif trail["host"][i]["key"] == keys["host"][i]:
+                trail["host"][i]["mcount"] += freq
+            else:
+                _compact_subtree("host", i)
+                _reset_trail("host", i)
+                _compact_subtree("path", 0)
+                _reset_trail("path", 0)
+                _init_node("host", i)
+        for i in range(len(keys["path"])):
+            if not trail["path"][i]:
+                _init_node("path", i)
+            elif trail["path"][i]["key"] == keys["path"][i]:
+                trail["path"][i]["mcount"] += freq
+            else:
+                _compact_subtree("path", i)
+                _reset_trail("path", i)
+                _init_node("path", i)
+        opf.write(surtk + b" %d\n" % freq)
+        counts["outlines"] += 1
+    _compact_subtree("host", 0)
+    _compact_subtree("path", 0)
     opf.truncate()
     opf.close()
     return counts
