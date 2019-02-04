@@ -2,7 +2,7 @@ import re
 
 
 def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, **kw):
-    sep = {"host": ",", "path": "/"}
+    sep = {"host": b",", "path": b"/"}
     maxdepth = {"host": hdepth, "path": pdepth}
     cutoff = {
         "host": [ha * (i+1) ** -hk * hcf for i in range(maxdepth["host"])],
@@ -44,22 +44,22 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
             if trail[layer][i]["ccount"] > cutoff[layer][i]:
                 opf.seek(trail[layer][i]["optr"])
                 counts["outlines"] = trail[layer][i]["oline"]
-                opf.write(f'{trail[layer][i]["key"]}{sep[layer]}* {trail[layer][i]["mcount"]}\n')
+                opf.write(trail[layer][i]["key"] + sep[layer] + b"* %d\n" % trail[layer][i]["mcount"])
                 counts["outlines"] += 1
                 break
 
-    opf = open(outfile, "w")
-    with open(infile) as f:
+    opf = open(outfile, "wb")
+    with open(infile, "rb") as f:
         for line in f:
             counts["inlines"] += 1
-            if line[0] == "!":
+            if line[0] == b"!":
                 opf.write(line)
                 counts["outlines"] += 1
                 continue
             parts = line.split(maxsplit=2)
-            surtk = parts[0].strip("/,")
+            surtk = parts[0].strip(b"/,")
             freq = int(parts[1])
-            host, _, path = surtk.partition(")")
+            host, _, path = surtk.partition(b")")
             keys = {
                 "host": _gen_keys(host, "host"),
                 "path": _gen_keys(surtk, "path")
@@ -85,7 +85,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _compact_subtree("path", i)
                     _reset_trail("path", i)
                     _init_node("path", i)
-            opf.write(f"{surtk} {freq}\n")
+            opf.write(surtk + b" %d\n" % freq)
             counts["outlines"] += 1
         _compact_subtree("host", 0)
         _compact_subtree("path", 0)
