@@ -8,7 +8,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
         "host": [ha * (i+1) ** -hk * hcf for i in range(maxdepth["host"])],
         "path": [pa * (i+1) ** -pk * pcf for i in range(maxdepth["path"])]
     }
-    track = {
+    trail = {
         "host": [None]*maxdepth["host"],
         "path": [None]*maxdepth["path"]
     }
@@ -19,7 +19,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
         return [sep[layer].join(parts[:i+1]) for i in range(len(parts))]
 
     def _init_node(layer, idx):
-        track[layer][idx] = {
+        trail[layer][idx] = {
             "key": keys[layer][idx],
             "ccount": 0,
             "mcount": freq,
@@ -27,24 +27,24 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
             "oline": counts["outlines"]
         }
         if idx:
-            track[layer][idx-1]["ccount"] += 1
+            trail[layer][idx-1]["ccount"] += 1
 
     def _reset_trail(layer, idx):
         for i in range(idx, maxdepth[layer]):
-            if not track[layer][i]:
+            if not trail[layer][i]:
                 break
-            track[layer][i] = None
+            trail[layer][i] = None
 
     def _compact_subtree(layer, idx):
         for i in range(idx, maxdepth[layer]):
-            if not track[layer][i]:
+            if not trail[layer][i]:
                 break
             if not i and layer == "host":
                 continue
-            if track[layer][i]["ccount"] > cutoff[layer][i]:
-                opf.seek(track[layer][i]["optr"])
-                counts["outlines"] = track[layer][i]["oline"]
-                opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
+            if trail[layer][i]["ccount"] > cutoff[layer][i]:
+                opf.seek(trail[layer][i]["optr"])
+                counts["outlines"] = trail[layer][i]["oline"]
+                opf.write(f'{trail[layer][i]["key"]}{sep[layer]}* {trail[layer][i]["mcount"]}\n')
                 counts["outlines"] += 1
                 break
 
@@ -66,10 +66,10 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
             }
 
             for i in range(len(keys["host"])):
-                if not track["host"][i]:
+                if not trail["host"][i]:
                     _init_node("host", i)
-                elif track["host"][i]["key"] == keys["host"][i]:
-                    track["host"][i]["mcount"] += freq
+                elif trail["host"][i]["key"] == keys["host"][i]:
+                    trail["host"][i]["mcount"] += freq
                 else:
                     _compact_subtree("host", i)
                     _reset_trail("host", i)
@@ -77,10 +77,10 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _reset_trail("path", 0)
                     _init_node("host", i)
             for i in range(len(keys["path"])):
-                if not track["path"][i]:
+                if not trail["path"][i]:
                     _init_node("path", i)
-                elif track["path"][i]["key"] == keys["path"][i]:
-                    track["path"][i]["mcount"] += freq
+                elif trail["path"][i]["key"] == keys["path"][i]:
+                    trail["path"][i]["mcount"] += freq
                 else:
                     _compact_subtree("path", i)
                     _reset_trail("path", i)
