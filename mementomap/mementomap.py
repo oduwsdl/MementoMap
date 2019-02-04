@@ -57,9 +57,14 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
             opf.write(line)
             counts["outlines"] += 1
             continue
-        parts = line.split(maxsplit=2)
-        surtk = parts[0].strip(b"/,")
-        freq = int(parts[1])
+        try:
+            parts = line.split(maxsplit=2)
+            surtk = parts[0].strip(b"/,")
+            freq = int(parts[1])
+        except Exception as e:
+            continue
+        if b")" not in surtk:
+            continue
         host, _, path = surtk.partition(b")")
         keys = {
             "host": _gen_keys(host, "host"),
@@ -100,7 +105,10 @@ def cdx2hxpx(infiter):
     key = None
     count = 0
     for line in infiter:
-        surtk = line.split(maxsplit=1)[0].split(b"?")[0].strip(b"/,")
+        try:
+            surtk = line.split(maxsplit=1)[0].split(b"?")[0].strip(b"/,")
+        except Exception as e:
+            continue
         if b")" not in surtk:
             surtk = None
         if key == surtk:
