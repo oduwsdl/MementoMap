@@ -12,7 +12,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
         "host": [None]*maxdepth["host"],
         "path": [None]*maxdepth["path"]
     }
-    counts = {"inlines": 0, "outlines": 0}
+    counts = {"inlines": 0, "outlines": 0, "inbytes": 0, "outbytes": 0}
 
     def _gen_keys(str, layer):
         parts = str.strip(sep[layer]).split(sep[layer], maxdepth[layer]-1)
@@ -51,6 +51,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
     opf = open(outfile, "wb")
     for line in infiter:
         counts["inlines"] += 1
+        counts["inbytes"] += len(line)
         if line[0] == b"!":
             opf.write(line)
             counts["outlines"] += 1
@@ -89,6 +90,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
     _compact_subtree("host", 0)
     _compact_subtree("path", 0)
     opf.truncate()
+    counts["outbytes"] += opf.tell()
     opf.close()
     return counts
 
