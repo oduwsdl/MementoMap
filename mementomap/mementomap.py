@@ -47,8 +47,11 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
     opf = open(outfile, "w")
     with open(infile) as f:
         for line in f:
-            surtk, freq, *_ = line.split(maxsplit=2)
-            freq = int(freq)
+            if line[0] == "!":
+                continue
+            parts = line.split(maxsplit=2)
+            surtk = parts[0].strip("/,")
+            freq = int(parts[1])
             host, _, path = surtk.partition(")")
             keys = {
                 "host": _gen_keys(host, "host"),
@@ -75,7 +78,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _compact_subtree("path", i)
                     _reset_trail("path", i)
                     _init_node("path", i)
-            opf.write(line)
+            opf.write(f"{surtk} {freq}\n")
         _compact_subtree("host", 0)
         _compact_subtree("path", 0)
     opf.truncate()
@@ -106,7 +109,7 @@ def bin_search(mmap, key):
 def lookup_keys(surt):
     keyre = re.compile(r"(.+)([,/]).+")
     key = surt.split("?")[0].strip("/")
-    keys = [key]
+    keys = [key, f"{key}/*"]
     while "," in key:
         m = keyre.match(key)
         keys.append(f"{m[1]}{m[2]}*")
