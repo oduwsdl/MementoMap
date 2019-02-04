@@ -96,6 +96,29 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
     return counts
 
 
+def cdx2hxpx(infiter):
+    key = None
+    count = 0
+    for line in infiter:
+        surtk = line.split(maxsplit=1)[0].split(b"?")[0].strip(b"/,")
+        if b")" not in surtk:
+            surtk = None
+        if key == surtk:
+            count += 1
+        if key != surtk:
+            if key:
+                yield key + b" %d" % count
+            key = surtk
+            count = 1
+    if key:
+        yield key + b" %d" % count
+
+
+def generate(infiter, outfile, hcf=float("inf"), pcf=float("inf"), **kw):
+    hxpx = cdx2hxpx(infiter)
+    return compact(hxpx, outfile, hcf, pcf, **kw)
+
+
 def bin_search(mmap, key):
     with open(mmap, "rb") as f:
         surtk, freq, *_ = f.readline().split(maxsplit=2)
