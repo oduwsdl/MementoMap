@@ -12,6 +12,7 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
         "host": [None]*maxdepth["host"],
         "path": [None]*maxdepth["path"]
     }
+    counts = {"inlines": 0, "outlines": 0}
 
     def _gen_keys(str, layer):
         parts = str.strip(sep[layer]).split(sep[layer], maxdepth[layer]-1)
@@ -22,7 +23,8 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
             "key": keys[layer][idx],
             "ccount": 0,
             "mcount": freq,
-            "optr": opf.tell()
+            "optr": opf.tell(),
+            "oline": counts["outlines"]
         }
         if idx:
             track[layer][idx-1]["ccount"] += 1
@@ -41,13 +43,18 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                 continue
             if track[layer][i]["ccount"] > cutoff[layer][i]:
                 opf.seek(track[layer][i]["optr"])
+                counts["outlines"] = track[layer][i]["oline"]
                 opf.write(f'{track[layer][i]["key"]}{sep[layer]}* {track[layer][i]["mcount"]}\n')
+                counts["outlines"] += 1
                 break
 
     opf = open(outfile, "w")
     with open(infile) as f:
         for line in f:
+            counts["inlines"] += 1
             if line[0] == "!":
+                opf.write(line)
+                counts["outlines"] += 1
                 continue
             parts = line.split(maxsplit=2)
             surtk = parts[0].strip("/,")
@@ -79,10 +86,12 @@ def compact(infile, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, p
                     _reset_trail("path", i)
                     _init_node("path", i)
             opf.write(f"{surtk} {freq}\n")
+            counts["outlines"] += 1
         _compact_subtree("host", 0)
         _compact_subtree("path", 0)
     opf.truncate()
     opf.close()
+    return counts
 
 
 def bin_search(mmap, key):

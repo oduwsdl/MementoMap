@@ -5,7 +5,12 @@ import argparse
 from mementomap.mementomap import compact, lookup
 
 
-def show_lookup(**kw):
+def run_compact(**kw):
+    res = compact(**kw)
+    print(f'{res["inlines"]} {res["outlines"]}')
+
+
+def run_lookup(**kw):
     res = lookup(**kw)
     if res:
         print(" ".join(res))
@@ -26,12 +31,12 @@ if __name__ == "__main__":
     compact_parser.add_argument("--pk", type=float, metavar="", default=1.429, help="Power law k parameter for path")
     compact_parser.add_argument("--hdepth", type=int, metavar="", default=8, help="Max host depth")
     compact_parser.add_argument("--pdepth", type=int, metavar="", default=9, help="Max path depth")
-    compact_parser.set_defaults(func=compact)
+    compact_parser.set_defaults(func=run_compact)
 
     lookup_parser = subparsers.add_parser("lookup", help="Look for a SURT into a MementoMap")
     lookup_parser.add_argument("mmap", help="MementoMap file to look into")
     lookup_parser.add_argument("surt", help="SURT to look for")
-    lookup_parser.set_defaults(func=show_lookup)
+    lookup_parser.set_defaults(func=run_lookup)
 
     args = parser.parse_args()
     try:
