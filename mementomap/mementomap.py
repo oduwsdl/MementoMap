@@ -79,22 +79,16 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
             "path": _gen_keys(surtk, "path")
         }
 
-        for i in range(len(keys["host"])):
-            if not trail["host"][i]:
-                _init_node("host", i)
-            elif trail["host"][i]["key"] == keys["host"][i]:
-                trail["host"][i]["mcount"] += freq
-            else:
-                _compact_subtree("host", i)
-                _init_node("host", i)
-        for i in range(len(keys["path"])):
-            if not trail["path"][i]:
-                _init_node("path", i)
-            elif trail["path"][i]["key"] == keys["path"][i]:
-                trail["path"][i]["mcount"] += freq
-            else:
-                _compact_subtree("path", i)
-                _init_node("path", i)
+        for layer in ["host", "path"]:
+            for i in range(len(keys[layer])):
+                if not trail[layer][i]:
+                    _init_node(layer, i)
+                elif trail[layer][i]["key"] == keys[layer][i]:
+                    trail[layer][i]["mcount"] += freq
+                else:
+                    _compact_subtree(layer, i)
+                    _init_node(layer, i)
+
         opf.write(surtk + b" %d\n" % freq)
         counts["outlines"] += 1
     _compact_subtree("host", 0)
