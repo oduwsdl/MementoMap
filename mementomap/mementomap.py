@@ -36,6 +36,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
             trail[layer][i] = None
 
     def _compact_subtree(layer, idx):
+        compacted = False
         for i in range(idx, maxdepth[layer]):
             if not trail[layer][i]:
                 break
@@ -47,7 +48,14 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
                 opf.write(trail[layer][i]["key"] + sep[layer] + b"* %d\n" % trail[layer][i]["mcount"])
                 counts["outlines"] += 1
                 counts["rollups"] += 1
+                compacted = True
                 break
+        _reset_trail(layer, idx)
+        if layer == "host":
+            if compacted:
+                _reset_trail("path", 0)
+            else:
+                _compact_subtree("path", 0)
 
     opf = open(outfile, "wb")
     for line in infiter:
@@ -63,7 +71,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
             freq = int(parts[1])
         except Exception as e:
             continue
-        if b")" not in surtk:
+        if b"," not in surtk:
             continue
         host, _, path = surtk.partition(b")")
         keys = {
@@ -78,9 +86,6 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
                 trail["host"][i]["mcount"] += freq
             else:
                 _compact_subtree("host", i)
-                _reset_trail("host", i)
-                _compact_subtree("path", 0)
-                _reset_trail("path", 0)
                 _init_node("host", i)
         for i in range(len(keys["path"])):
             if not trail["path"][i]:
@@ -89,7 +94,6 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
                 trail["path"][i]["mcount"] += freq
             else:
                 _compact_subtree("path", i)
-                _reset_trail("path", i)
                 _init_node("path", i)
         opf.write(surtk + b" %d\n" % freq)
         counts["outlines"] += 1
