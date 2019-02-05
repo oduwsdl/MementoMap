@@ -1,4 +1,7 @@
+import locale
 import re
+
+locale.setlocale(locale.LC_ALL, 'C')
 
 
 def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, pk=1.429, hdepth=8, pdepth=9, **kw):
@@ -158,7 +161,7 @@ def lookup_keys(surt):
 
 
 def lookup(mmap, surt, **kw):
-    for k in lookup_keys(surt):
-        res = bin_search(mmap, k.encode())
+    for idx, key in enumerate(lookup_keys(surt)):
+        res = bin_search(mmap, key.encode())
         if res:
-            return [i.decode() for i in res]
+            return [i.decode() for i in res] + [str(idx), surt]
