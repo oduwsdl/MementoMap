@@ -128,25 +128,24 @@ def generate(infiter, outfile, hcf=float("inf"), pcf=float("inf"), **kw):
     return compact(hxpx, outfile, hcf, pcf, **kw)
 
 
-def bin_search(mmap, key):
-    with open(mmap, "rb") as f:
-        surtk, freq, *_ = f.readline().split(maxsplit=2)
+def bin_search(mmapiter, key):
+    surtk, freq, *_ = mmapiter.readline().split(maxsplit=2)
+    if key == surtk:
+        return [surtk, freq]
+    left = 0
+    mmapiter.seek(0, 2)
+    right = mmapiter.tell()
+    while (right - left > 1):
+        mid = (right + left) // 2
+        mmapiter.seek(mid)
+        mmapiter.readline()
+        surtk, freq, *_ = mmapiter.readline().split(maxsplit=2)
         if key == surtk:
             return [surtk, freq]
-        left = 0
-        f.seek(0, 2)
-        right = f.tell()
-        while (right - left > 1):
-            mid = (right + left) // 2
-            f.seek(mid)
-            f.readline()
-            surtk, freq, *_ = f.readline().split(maxsplit=2)
-            if key == surtk:
-                return [surtk, freq]
-            elif key > surtk:
-                left = mid
-            else:
-                right = mid
+        elif key > surtk:
+            left = mid
+        else:
+            right = mid
 
 
 def lookup_keys(surt):
@@ -160,8 +159,8 @@ def lookup_keys(surt):
     return keys
 
 
-def lookup(mmap, surt, **kw):
+def lookup(mmapiter, surt, **kw):
     for idx, key in enumerate(lookup_keys(surt)):
-        res = bin_search(mmap, key.encode())
+        res = bin_search(mmapiter, key.encode())
         if res:
-            return [i.decode() for i in res] + [str(idx), surt]
+            return {"surtk": res[0].decode(), "freq": res[1].decode(), "dist": str(idx), "surt": surt}

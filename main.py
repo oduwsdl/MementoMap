@@ -34,9 +34,30 @@ def run_compact(**kw):
 
 
 def run_lookup(**kw):
+    mobj = open(kw["mmap"], "rb")
+    kw["mmapiter"] = mobj
     res = lookup(**kw)
+    mobj.close()
     if res:
-        print(" ".join(res))
+        print(f'{res["surtk"]} {res["freq"]} {res["dist"]} {res["surt"]}')
+
+
+def run_batchlookup(**kw):
+    mobj = open(kw["mmap"], "rb")
+    kw["mmapiter"] = mobj
+    if kw["infile"].endswith(".gz"):
+        fobj = gzip.open(kw["infile"], "rb")
+    elif kw["infile"] == "-":
+        fobj = sys.stdin.buffer
+    else:
+        fobj = open(kw["infile"], "rb")
+    for line in fobj:
+        kw["surt"] = line.strip().decode()
+        res = lookup(**kw)
+        if res:
+            print(f'{res["surtk"]} {res["freq"]} {res["dist"]} {res["surt"]}')
+    fobj.close()
+    mobj.close()
 
 
 if __name__ == "__main__":
@@ -73,6 +94,11 @@ if __name__ == "__main__":
     lookup_parser.add_argument("mmap", help="MementoMap file path to look into")
     lookup_parser.add_argument("surt", help="SURT to look for")
     lookup_parser.set_defaults(func=run_lookup)
+
+    batchlookup_parser = subparsers.add_parser("batchlookup", help="Look for a SURT into a MementoMap")
+    batchlookup_parser.add_argument("mmap", help="MementoMap file path to look into")
+    batchlookup_parser.add_argument("infile", help="Input SURT (plain or GZip) file path or '-' for STDIN")
+    batchlookup_parser.set_defaults(func=run_batchlookup)
 
     args = parser.parse_args()
     try:
