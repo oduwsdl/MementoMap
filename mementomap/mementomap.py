@@ -153,9 +153,12 @@ def lookup_keys(surt):
     key = surt.split("?")[0].strip("/")
     keys = [key, f"{key}/*"]
     while "," in key:
-        m = keyre.match(key)
-        keys.append(f"{m[1]}{m[2]}*")
-        key = m[1]
+        try:
+            m = keyre.match(key)
+            keys.append(f"{m[1]}{m[2]}*")
+            key = m[1]
+        except Exception as e:
+            key = key.strip("/,")
     return keys
 
 
