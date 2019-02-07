@@ -12,7 +12,7 @@ positional arguments:
                         first columns as SURT (e.g., CDX/CDXJ)
     compact             Compact a large MementoMap file into a small one
     lookup              Look for a SURT into a MementoMap
-    batchlookup         Look for a SURT into a MementoMap
+    batchlookup         Look for a list of SURTs into a MementoMap
 
 optional arguments:
   -h, --help            show this help message and exit

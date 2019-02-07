@@ -95,7 +95,7 @@ if __name__ == "__main__":
     lookup_parser.add_argument("surt", help="SURT to look for")
     lookup_parser.set_defaults(func=run_lookup)
 
-    batchlookup_parser = subparsers.add_parser("batchlookup", help="Look for a SURT into a MementoMap")
+    batchlookup_parser = subparsers.add_parser("batchlookup", help="Look for a list of SURTs into a MementoMap")
     batchlookup_parser.add_argument("mmap", help="MementoMap file path to look into")
     batchlookup_parser.add_argument("infile", help="Input SURT (plain or GZip) file path or '-' for STDIN")
     batchlookup_parser.set_defaults(func=run_batchlookup)
