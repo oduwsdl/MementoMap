@@ -70,7 +70,7 @@ def compact(infiter, outfile, hcf=1.0, pcf=1.0, ha=16.329, hk=0.714, pa=24.546, 
             continue
         try:
             parts = line.split(maxsplit=2)
-            surtk = parts[0].strip(b"/,")
+            surtk = parts[0].split(b"?")[0].strip(b"/,")
             freq = int(parts[1])
         except Exception as e:
             continue
