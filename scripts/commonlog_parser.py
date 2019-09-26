@@ -52,7 +52,7 @@ def print_fields():
     return "\n".join(lines)
 
 
-def parse_record(line, non_empty_fields=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
+def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
     m = patterns["clog"].match(line)
     if not m:
         raise ValueError("Malformed record")
@@ -85,6 +85,12 @@ def parse_record(line, non_empty_fields=[], origtime_format="%d/%b/%Y:%H:%M:%S %
         if record.get(fld, "") in ["", "-"]:
             raise ValueError(f"Empty field: {fld}")
 
+    for (fld, reg) in field_matches:
+        val = record.get(fld, "")
+        m = reg.search(val)
+        if not m:
+            raise ValueError(f"Mismatch field {fld}: {val}")
+
     return record
 
 
@@ -92,6 +98,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [FILES ...]", description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
     parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of the provided fields is empty (comma separated list)")
+    parser.add_argument("-m", "--match-field", metavar="FIELD~RegExp", default=[], action="append", help="Skip record if field does not match the RegExp (can be used multiple times)")
     parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
     parser.add_argument("-f", "--format", default=output_format, help="Output format string (see available formatting fields below)")
     parser.add_argument("-j", "--json", metavar="JFIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Output NDJSON with the provided fields (use 'all' for all fields except 'origline')")
@@ -103,10 +110,22 @@ if __name__ == "__main__":
     if not args.debug:
         debuglog = open(os.devnull, "w")
 
+    field_matches = []
+    for am in args.match_field:
+        fm = am.split("~", 1)
+        if len(fm) != 2 or fm[0] not in formatting_fields.keys() or not fm[1]:
+            sys.exit(f"'{am}' is not a valid field match option (use 'FIELD~RegEg' instead)")
+        try:
+            reg = re.compile(fm[1])
+            field_matches.append((fm[0], reg))
+        except Exception as e:
+            sys.exit(f"'{fm[1]}' is not a valid Regular Expression")
+
+
     for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
         try:
             line = line.decode().strip()
-            record = parse_record(line, non_empty_fields=args.empty_skip, origtime_format=args.origtime_format)
+            record = parse_record(line, non_empty_fields=args.empty_skip, field_matches=field_matches, origtime_format=args.origtime_format)
         except Exception as e:
             print(f"SKIPPING [{e}]: {line}", file=debuglog)
             continue
@@ -121,4 +140,4 @@ if __name__ == "__main__":
         except BrokenPipeError as e:
             sys.exit()
         except KeyError as e:
-            sys.exit(f"{e} is not a valid formatting field")
+            sys.exit(f"'{e}' is not a valid formatting field")
