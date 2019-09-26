@@ -2,6 +2,7 @@
 
 import argparse
 import fileinput
+import json
 import os
 import re
 import sys
@@ -90,10 +91,11 @@ def parse_record(line, non_empty_fields=[], origtime_format="%d/%b/%Y:%H:%M:%S %
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [FILES ...]", description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
-    parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of these fields is empty (comma separated list)")
+    parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of the provided fields is empty (comma separated list)")
     parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
-    parser.add_argument("-f", "--format", default=output_format, help="Output format string")
-    parser.add_argument("files", nargs="*", help="One or more log files (plain, gz, or bz2) to parse\n(reads from the STDIN, if empty or '-')")
+    parser.add_argument("-f", "--format", default=output_format, help="Output format string (see available formatting fields below)")
+    parser.add_argument("-j", "--json", metavar="JFIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Output NDJSON with the provided fields (use 'all' for all fields except 'origline')")
+    parser.add_argument("files", nargs="*", help="Log files (plain/gz/bz2) to parse (reads from the STDIN, if empty or '-')")
     args = parser.parse_args()
 
 
@@ -110,8 +112,13 @@ if __name__ == "__main__":
             continue
 
         try:
-            print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
+            if args.json:
+                if args.json == ["all"]:
+                    args.json = formatting_fields.keys() - "origline"
+                print(json.dumps({fld: record[fld] for fld in args.json}))
+            else:
+                print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
         except BrokenPipeError as e:
             sys.exit()
         except KeyError as e:
-            sys.exit(f"{e} is not a valid format option")
+            sys.exit(f"{e} is not a valid formatting field")
