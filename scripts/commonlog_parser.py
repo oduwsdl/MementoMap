@@ -47,7 +47,7 @@ def print_fields():
     for fld, desc in formatting_fields.items():
         fld = f"{{{fld}}}"
         lines.append(f"  {fld:21} {desc}")
-    lines.append(f"default FORMAT: '{output_format}'")
+    lines.append(f"Default FORMAT: '{output_format}'")
     return "\n".join(lines)
 
 
@@ -88,7 +88,7 @@ def parse_record(line, non_empty_fields=[], origtime_format="%d/%b/%Y:%H:%M:%S %
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] [FILES ...]", description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
     parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of these fields is empty (comma separated list)")
     parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
