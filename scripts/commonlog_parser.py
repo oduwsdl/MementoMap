@@ -13,17 +13,19 @@ patterns = {
     "urim": re.compile(r'^(?P<prefix>[\w\-\/]*?\/)(?P<mtime>\d{14})((?P<rflag>[a-z]{2}_))?\/(?P<urir>\S+)$')
 }
 
-output_format = '{host} {date} {time} {path} {status} {size} "{referrer}" "{agent}"'
+origtime_format = "%d/%b/%Y:%H:%M:%S %z"
+output_format = '{host} {date} {time} {method} {path} {status} {size} "{referrer}" "{agent}"'
 
 formatting_fields = {
+    "origline": "Original log line",
     "host": "IP address of the client",
     "identity": "Identity of the client, usually '-'",
     "user": "User ID for authentication, usually '-'",
-    "origtime": "Date and time in '%d/%b/%Y:%H:%M:%S %z' format",
+    "origtime": "Original date and time (typically in '%d/%b/%Y:%H:%M:%S %z' format)",
     "epoch": "Seconds from the Unix epoch (derived from origtime)",
     "date": "UTC date in '%Y-%m-%d' format (derived from origtime)",
     "time": "UTC time in '%H:%M:%S' format (derived from origtime)",
-    "digits": "14 digit datetime in '%Y%m%d%H%M%S' format (derived from origtime)",
+    "datetime": "14 digit datetime in '%Y%m%d%H%M%S' format (derived from origtime)",
     "request": "Original HTTP request line",
     "method": "HTTP method (empty for invalid request)",
     "path": "Path and query (scheme and host removed, empty for invalid request)",
@@ -49,21 +51,22 @@ def print_fields():
     return "\n".join(lines)
 
 
-def parse_record(line, non_empty_fields=[]):
+def parse_record(line, non_empty_fields=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
     m = patterns["clog"].match(line)
     if not m:
         raise ValueError("Malformed record")
 
     record = {fld: "" for fld in formatting_fields}
+    record["origline"] = line
     record.update(m.groupdict(default=""))
 
     try:
-        et = time.mktime(time.strptime(record["origtime"], "%d/%b/%Y:%H:%M:%S %z"))
+        et = time.mktime(time.strptime(record["origtime"], origtime_format))
         record["epoch"] = int(et)
         ut = time.gmtime(et)
         record["date"] = time.strftime("%Y-%m-%d", ut)
         record["time"] = time.strftime("%H:%M:%S", ut)
-        record["digits"] = time.strftime("%Y%m%d%H%M%S", ut)
+        record["datetime"] = time.strftime("%Y%m%d%H%M%S", ut)
     except Exception as e:
         raise ValueError(f"Invalid time: {record['origtime']}")
 
@@ -88,7 +91,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
     parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of these fields is empty (comma separated list)")
-    parser.add_argument("-f", "--format", default=output_format, help=f"Output format string")
+    parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
+    parser.add_argument("-f", "--format", default=output_format, help="Output format string")
     parser.add_argument("files", nargs="*", help="One or more log files (plain, gz, or bz2) to parse\n(reads from the STDIN, if empty or '-')")
     args = parser.parse_args()
 
@@ -100,7 +104,7 @@ if __name__ == "__main__":
     for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
         try:
             line = line.decode().strip()
-            record = parse_record(line, non_empty_fields=args.empty_skip)
+            record = parse_record(line, non_empty_fields=args.empty_skip, origtime_format=args.origtime_format)
         except Exception as e:
             print(f"SKIPPING [{e}]: {line}", file=debuglog)
             continue
