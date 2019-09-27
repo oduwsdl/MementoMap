@@ -10,7 +10,7 @@ import time
 
 patterns = {
     "clog": re.compile(r'^(?P<host>\S+)\s+(?P<identity>\S+)\s+(?P<user>\S+)\s+\[(?P<origtime>.+?)\]\s+"(?P<request>.*?)"\s+(?P<status>\S+)\s+(?P<size>\S+)(\s+"(?P<referrer>.*?)"\s+"(?P<agent>.*?)"\s*(?P<extras>.*?))?\s*$'),
-    "hreq": re.compile(r'^(?P<method>[A-Z]+)\s+(https?://[\w\-\.]+)?(?P<path>\S+)\s+(?P<httpv>\S+)$'),
+    "hreq": re.compile(r'^(?P<method>[A-Z]+)\s+([hH][tT]{2}[pP][sS]?://[\w\-\.]+(:\d+)?)?(?P<path>\S+)\s+(?P<httpv>\S+)$'),
     "urim": re.compile(r'^(?P<prefix>[\w\-\/]*?\/)(?P<mtime>\d{14})((?P<rflag>[a-z]{2}_))?\/(?P<urir>\S+)$')
 }
 
