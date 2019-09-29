@@ -8,7 +8,7 @@ import re
 import sys
 import time
 
-patterns = {
+matchers = {
     "clog": re.compile(r'^(?P<host>\S+)\s+(?P<identity>\S+)\s+(?P<user>\S+)\s+\[(?P<origtime>.+?)\]\s+"(?P<request>.*?)"\s+(?P<status>\S+)\s+(?P<size>\S+)(\s+"(?P<referrer>.*?)"\s+"(?P<agent>.*?)"\s*(?P<extras>.*?))?\s*$'),
     "hreq": re.compile(r'^(?P<method>[A-Z]+)\s+([hH][tT]{2}[pP][sS]?://[\w\-\.]+(:\d+)?)?(?P<path>\S+)\s+(?P<httpv>\S+)$'),
     "urim": re.compile(r'^(?P<prefix>[\w\-\/]*?\/)(?P<mtime>\d{14})((?P<rflag>[a-z]{2}_))?\/(?P<urir>\S+)$')
@@ -53,7 +53,7 @@ def print_fields():
 
 
 def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
-    m = patterns["clog"].match(line)
+    m = matchers["clog"].match(line)
     if not m:
         raise ValueError("Malformed record")
 
@@ -71,13 +71,13 @@ def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%
     except Exception as e:
         raise ValueError(f"Invalid time: {record['origtime']}")
 
-    m = patterns["hreq"].match(record["request"])
+    m = matchers["hreq"].match(record["request"])
     if m:
         record.update(m.groupdict(default=""))
     if not record["method"]:
         raise ValueError(f"Invalid request: {record['request']}")
 
-    m = patterns["urim"].match(record["path"])
+    m = matchers["urim"].match(record["path"])
     if m:
         record.update(m.groupdict(default=""))
 
