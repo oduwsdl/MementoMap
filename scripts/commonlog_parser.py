@@ -14,6 +14,10 @@ matchers = {
     "urim": re.compile(r'^(?P<prefix>[\w\-\/]*?\/)(?P<mtime>\d{14})((?P<rflag>[a-z]{2}_))?\/(?P<urir>\S+)$')
 }
 
+validators = {
+    "host": re.compile(r'^((25[0-5]|(2[0-4]|1\d?|[2-9])?\d)(\.(25[0-5]|(2[0-4]|1\d?|[2-9])?\d)){3})$')
+}
+
 origtime_format = "%d/%b/%Y:%H:%M:%S %z"
 output_format = '{host} {date} {time} {method} {path} {status} {size} "{referrer}" "{agent}"'
 
