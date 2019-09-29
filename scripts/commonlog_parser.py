@@ -61,6 +61,10 @@ def print_fields():
     return "\n".join(lines)
 
 
+def print_summary(**kw):
+    print(f"PROCESSED: {icount}, PRODUCED: {ocount}, SKIPPED: {icount - ocount}", **kw)
+
+
 def parse_record(line, non_empty_fields=[], validate_fields=[], field_matches=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
     m = matchers["clog"].match(line)
     if not m:
@@ -142,26 +146,30 @@ if __name__ == "__main__":
         if vf not in validators.keys():
             sys.exit(f"'{vf}' field does not have a builtin validation, only '{','.join(validators.keys())}' do")
 
-    for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
-        if icount and not icount % 1_000:
-            print(f"PROCESSED: {icount}, PRODUCED: {ocount}, SKIPPED: {icount - ocount}", file=debuglog)
-        icount += 1
-        try:
-            line = line.decode().strip()
-            record = parse_record(line, non_empty_fields=args.non_empty_fields, validate_fields=args.validate_fields, field_matches=field_matches, origtime_format=args.origtime_format)
-        except Exception as e:
-            print(f"SKIPPING [{e}]: {line}", file=debuglog)
-            continue
+    try:
+        for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
+            if not icount % 1_000 and icount:
+                print_summary(file=debuglog)
 
-        try:
-            if args.json:
-                if args.json == ["all"]:
-                    args.json = formatting_fields.keys() - "origline"
-                print(json.dumps({fld: record[fld] for fld in args.json}))
-            else:
-                print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
-        ocount += 1
-        except BrokenPipeError as e:
-            sys.exit()
-        except KeyError as e:
-            sys.exit(f"'{e}' is not a valid formatting field")
+            icount += 1
+            try:
+                line = line.decode().strip()
+                record = parse_record(line, non_empty_fields=args.non_empty_fields, validate_fields=args.validate_fields, field_matches=field_matches, origtime_format=args.origtime_format)
+            except Exception as e:
+                print(f"SKIPPING [{e}]: {line}", file=debuglog)
+                continue
+
+            try:
+                if args.json:
+                    if args.json == ["all"]:
+                        args.json = formatting_fields.keys() - "origline"
+                    print(json.dumps({fld: record[fld] for fld in args.json}))
+                else:
+                    print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
+                ocount += 1
+            except KeyError as e:
+                sys.exit(f"'{e}' is not a valid formatting field")
+        print_summary(file=debuglog)
+    except (BrokenPipeError, KeyboardInterrupt) as e:
+        print_summary(file=debuglog)
+        sys.exit()
