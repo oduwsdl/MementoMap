@@ -141,10 +141,20 @@ if __name__ == "__main__":
 
     if args.validate_fields == ["all"]:
         args.validate_fields = validators.keys()
-
     for vf in args.validate_fields:
         if vf not in validators.keys():
             sys.exit(f"'{vf}' field does not have a builtin validation, only '{','.join(validators.keys())}' do")
+
+    if args.json == ["all"]:
+        args.json = formatting_fields.keys() - "origline"
+    try:
+        empty_record = {fld: "" for fld in formatting_fields}
+        args.format.replace("\\t", "\t").format_map(empty_record)
+        json.dumps({fld: empty_record[fld] for fld in args.json})
+    except KeyError as e:
+        sys.exit(f"'{e}' is not a valid formatting field")
+    except ValueError as e:
+        sys.exit(e)
 
     try:
         for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
@@ -159,16 +169,11 @@ if __name__ == "__main__":
                 print(f"SKIPPING [{e}]: {line}", file=debuglog)
                 continue
 
-            try:
-                if args.json:
-                    if args.json == ["all"]:
-                        args.json = formatting_fields.keys() - "origline"
-                    print(json.dumps({fld: record[fld] for fld in args.json}))
-                else:
-                    print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
-                ocount += 1
-            except KeyError as e:
-                sys.exit(f"'{e}' is not a valid formatting field")
+            if args.json:
+                print(json.dumps({fld: record[fld] for fld in args.json}))
+            else:
+                print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
+            ocount += 1
         print_summary(file=debuglog)
     except (BrokenPipeError, KeyboardInterrupt) as e:
         print_summary(file=debuglog)
