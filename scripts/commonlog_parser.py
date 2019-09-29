@@ -105,7 +105,7 @@ def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [FILES ...]", description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
-    parser.add_argument("-e", "--empty-skip", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of the provided fields is empty (comma separated list)")
+    parser.add_argument("-n", "--non-empty-fields", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of the provided fields is empty (comma separated list)")
     parser.add_argument("-m", "--match-field", metavar="FIELD~RegExp", default=[], action="append", help="Skip record if field does not match the RegExp (can be used multiple times)")
     parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
     parser.add_argument("-f", "--format", default=output_format, help="Output format string (see available formatting fields below)")
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
         try:
             line = line.decode().strip()
-            record = parse_record(line, non_empty_fields=args.empty_skip, field_matches=field_matches, origtime_format=args.origtime_format)
+            record = parse_record(line, non_empty_fields=args.non_empty_fields, field_matches=field_matches, origtime_format=args.origtime_format)
         except Exception as e:
             print(f"SKIPPING [{e}]: {line}", file=debuglog)
             continue
