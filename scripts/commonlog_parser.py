@@ -24,6 +24,7 @@ validators = {
 
 origtime_format = "%d/%b/%Y:%H:%M:%S %z"
 output_format = '{host} {date} {time} {method} {path} {status} {size} "{referrer}" "{agent}"'
+icount = ocount = 0
 
 formatting_fields = {
     "origline": "Original log line",
@@ -142,6 +143,9 @@ if __name__ == "__main__":
             sys.exit(f"'{vf}' field does not have a builtin validation, only '{','.join(validators.keys())}' do")
 
     for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
+        if icount and not icount % 1_000:
+            print(f"PROCESSED: {icount}, PRODUCED: {ocount}, SKIPPED: {icount - ocount}", file=debuglog)
+        icount += 1
         try:
             line = line.decode().strip()
             record = parse_record(line, non_empty_fields=args.non_empty_fields, validate_fields=args.validate_fields, field_matches=field_matches, origtime_format=args.origtime_format)
@@ -156,6 +160,7 @@ if __name__ == "__main__":
                 print(json.dumps({fld: record[fld] for fld in args.json}))
             else:
                 print(args.format.replace("\\t", "\t").format_map({k: v or "-" for k, v in record.items()}))
+        ocount += 1
         except BrokenPipeError as e:
             sys.exit()
         except KeyError as e:
