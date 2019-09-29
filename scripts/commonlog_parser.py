@@ -15,7 +15,7 @@ matchers = {
 }
 
 validators = {
-    "host": re.compile(r'^[\da-fA-F\.:]{2,39}$')
+    "host": re.compile(r'^((25[0-5]|(2[0-4]|1\d?|[2-9])?\d)(\.(25[0-5]|(2[0-4]|1\d?|[2-9])?\d)){3})|([\da-fA-F]{0,4}:){2,7}[\da-fA-F]{0,4}$')
 }
 
 origtime_format = "%d/%b/%Y:%H:%M:%S %z"
