@@ -10,13 +10,13 @@ import time
 
 matchers = {
     "clog": re.compile(r'^(?P<host>\S+)\s+(?P<identity>\S+)\s+(?P<user>\S+)\s+\[(?P<origtime>.+?)\]\s+"(?P<request>.*?)"\s+(?P<status>\S+)\s+(?P<size>\S+)(\s+"(?P<referrer>.*?)"\s+"(?P<agent>.*?)"\s*(?P<extras>.*?))?\s*$'),
-    "hreq": re.compile(r'^(?P<method>[A-Z]+)\s+([hH][tT]{2}[pP][sS]?://[\w\-\.]+(:\d+)?)?(?P<path>\S+)\s+(?P<httpv>HTTP\/\d[\.\d]?)$'),
+    "hreq": re.compile(r'^(?P<method>[A-Z]+)\s+([hH][tT]{2}[pP][sS]?://[\w\-\.]+(:\d+)?)?(?P<path>\S+)\s+(?P<httpv>HTTP\/\d(\.\d)?)$'),
     "urim": re.compile(r'^(?P<prefix>[\w\-\/]*?\/)(?P<mtime>\d{14})((?P<rflag>[a-z]{2}_))?\/(?P<urir>\S+)$')
 }
 
 validators = {
     "host": re.compile(r'^((25[0-5]|(2[0-4]|1\d?|[2-9])?\d)(\.(25[0-5]|(2[0-4]|1\d?|[2-9])?\d)){3})|([\da-fA-F]{0,4}:){2,7}[\da-fA-F]{0,4}$'),
-    "request": re.compile(r'^[A-Z]+\s+\S+\s+HTTP\/\d[\.\d]?$'),
+    "request": re.compile(r'^[A-Z]+\s+\S+\s+HTTP\/\d(\.\d)?$'),
     "status": re.compile(r'^[1-5]\d{2}$'),
     "size": re.compile(r'^\-|\d+$'),
     "referrer": re.compile(r'^(https?://[\w\-\.]+(:\d+)?(/(\S)*)?)?$', re.I)
@@ -60,7 +60,7 @@ def print_fields():
     return "\n".join(lines)
 
 
-def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
+def parse_record(line, non_empty_fields=[], validate_fields=[], field_matches=[], origtime_format="%d/%b/%Y:%H:%M:%S %z"):
     m = matchers["clog"].match(line)
     if not m:
         raise ValueError("Malformed record")
@@ -68,6 +68,12 @@ def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%
     record = {fld: "" for fld in formatting_fields}
     record["origline"] = line
     record.update(m.groupdict(default=""))
+
+    for fld in validate_fields:
+        reg = validators.get(fld)
+        val = record.get(fld, "")
+        if reg and not reg.match(val):
+            raise ValueError(f"Invalid field {fld}: {val}")
 
     try:
         et = time.mktime(time.strptime(record["origtime"], origtime_format))
@@ -82,8 +88,6 @@ def parse_record(line, non_empty_fields=[], field_matches=[], origtime_format="%
     m = matchers["hreq"].match(record["request"])
     if m:
         record.update(m.groupdict(default=""))
-    if not record["method"]:
-        raise ValueError(f"Invalid request: {record['request']}")
 
     m = matchers["urim"].match(record["path"])
     if m:
@@ -106,6 +110,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [FILES ...]", description="A tool to parse Common Log formatted access logs with various derived fields.", epilog=print_fields(), formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages on STDERR")
     parser.add_argument("-n", "--non-empty-fields", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help="Skip record if any of the provided fields is empty (comma separated list)")
+    parser.add_argument("-v", "--validate-fields", metavar="FIELDS", default=[], type=lambda f: [fld.strip() for fld in f.split(",")], help=f"Skip record if any of the provided field values are invalid ('all' or comma separated list from '{','.join(validators.keys())}')")
     parser.add_argument("-m", "--match-field", metavar="FIELD~RegExp", default=[], action="append", help="Skip record if field does not match the RegExp (can be used multiple times)")
     parser.add_argument("-t", "--origtime-format", metavar="TFORMAT", default=origtime_format, help=f"Original datetime format of logs (default: '{origtime_format.replace('%', '%%')}')")
     parser.add_argument("-f", "--format", default=output_format, help="Output format string (see available formatting fields below)")
@@ -129,11 +134,17 @@ if __name__ == "__main__":
         except Exception as e:
             sys.exit(f"'{fm[1]}' is not a valid Regular Expression")
 
+    if args.validate_fields == ["all"]:
+        args.validate_fields = validators.keys()
+
+    for vf in args.validate_fields:
+        if vf not in validators.keys():
+            sys.exit(f"'{vf}' field does not have a builtin validation, only '{','.join(validators.keys())}' do")
 
     for line in fileinput.input(files=args.files, mode="rb", openhook=fileinput.hook_compressed):
         try:
             line = line.decode().strip()
-            record = parse_record(line, non_empty_fields=args.non_empty_fields, field_matches=field_matches, origtime_format=args.origtime_format)
+            record = parse_record(line, non_empty_fields=args.non_empty_fields, validate_fields=args.validate_fields, field_matches=field_matches, origtime_format=args.origtime_format)
         except Exception as e:
             print(f"SKIPPING [{e}]: {line}", file=debuglog)
             continue
