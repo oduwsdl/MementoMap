@@ -85,3 +85,33 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
 ```
+
+
+## Citing Project
+
+A publication related to this project appeared in the proceedings of JCDL 2019 ([Read the PDF](https://arxiv.org/pdf/1905.12607.pdf)). Please cite it as below:
+
+> Sawood Alam, Michele C. Weigle, Michael L. Nelson, Fernando Melo, Daniel Bicho, Daniel Gomes. __MementoMap Framework for Flexible and Adaptive Web Archive Profiling__. In _Proceedings of the 19th ACM/IEEE-CS on Joint Conference on Digital Libraries, JCDL 2019_, pp. 172-181, Urbana-Champaign, Illinois, USA, June 2016.
+
+```latex
+@inproceedings{jcdl-2019:alam:mementomap,
+  author    = {Sawood Alam and
+               Michele C. Weigle and
+               Michael L. Nelson and
+               Fernando Melo and
+               Daniel Bicho and
+               Daniel Gomes},
+  title     = {{MementoMap} Framework for Flexible and Adaptive Web Archive Profiling},
+  booktitle = {Proceedings of the 19th {ACM/IEEE-CS} Joint Conference on Digital Libraries},
+  series    = {JCDL '19},
+  year      = {2019},
+  month     = {jun},
+  location  = {Urbana-Champaign, Illinois, USA},
+  pages     = {172--181},
+  numpages  = {10},
+  url       = {https://doi.org/10.1109/JCDL.2019.00033},
+  doi       = {10.1109/JCDL.2019.00033},
+  isbn      = {978-1-7281-1547-4},
+  publisher = {{IEEE}}
+}
+```
