@@ -3,8 +3,13 @@
 import argparse
 import gzip
 import sys
+import os
 
-from mementomap.mementomap import compact, generate, lookup
+if not __package__:
+    sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from mementomap import __VERSION__
+from mementomap.cli import compact, generate, lookup
 
 
 def run_generate(**kw):
@@ -60,7 +65,7 @@ def run_batchlookup(**kw):
     mobj.close()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -105,3 +110,7 @@ if __name__ == "__main__":
         args.func(**vars(args))
     except Exception as e:
         parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
