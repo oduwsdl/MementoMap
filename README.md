@@ -1,10 +1,14 @@
 # MementoMap
 
-A framework of web archive profiling to express holdings of an archive
+A framework of web archive profiling to express summary of the holdings of an archive.
 
 ```
-$ ./main.py
-usage: main.py [-h] {generate,compact,lookup,batchlookup} ...
+$ pip install mementomap
+```
+
+```
+$ mementomap
+usage: mementomap [-h] {generate,compact,lookup,batchlookup} ...
 
 positional arguments:
   {generate,compact,lookup,batchlookup}
@@ -19,8 +23,8 @@ optional arguments:
 ```
 
 ```
-$ ./main.py generate -h
-usage: main.py generate [-h] [--hcf] [--pcf] [--ha] [--pa] [--hk] [--pk]
+$ mementomap generate -h
+usage: mementomap generate [-h] [--hcf] [--pcf] [--ha] [--pa] [--hk] [--pk]
                         [--hdepth] [--pdepth]
                         infile outfile
 
@@ -41,8 +45,8 @@ optional arguments:
 ```
 
 ```
-$ ./main.py compact -h
-usage: main.py compact [-h] [--hcf] [--pcf] [--ha] [--pa] [--hk] [--pk]
+$ mementomap compact -h
+usage: mementomap compact [-h] [--hcf] [--pcf] [--ha] [--pa] [--hk] [--pk]
                        [--hdepth] [--pdepth]
                        infile outfile
 
@@ -63,8 +67,8 @@ optional arguments:
 ```
 
 ```
-$ ./main.py lookup -h
-usage: main.py lookup [-h] mmap surt
+$ mementomap lookup -h
+usage: mementomap lookup [-h] mmap surt
 
 positional arguments:
   mmap        MementoMap file path to look into
@@ -75,8 +79,8 @@ optional arguments:
 ```
 
 ```
-$ ./main.py batchlookup -h
-usage: main.py batchlookup [-h] mmap infile
+$ mementomap batchlookup -h
+usage: mementomap batchlookup [-h] mmap infile
 
 positional arguments:
   mmap        MementoMap file path to look into
